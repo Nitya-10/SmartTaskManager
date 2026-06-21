@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Task Manager - Automated Integration Tests</title>
+  <!-- Link main CSS stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  
+  <style>
+    /* Styling for test container split layout */
+    .test-wrapper {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 2.5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+
+    /* Test Runner Panel Styling */
+    .runner-panel {
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 2rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      height: fit-content;
+    }
+
+    .runner-header {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 1rem;
+    }
+
+    .runner-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.25rem;
+    }
+
+    .runner-subtitle {
+      color: #94a3b8;
+      font-size: 0.85rem;
+    }
+
+    /* Suite status card */
+    .status-summary {
+      background: rgba(10, 15, 30, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 14px;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .suite-status {
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-idle { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+    .status-running { background: rgba(99, 102, 241, 0.2); color: #818cf8; animation: pulse 1.5s infinite; }
+    .status-passed { background: rgba(16, 185, 129, 0.2); color: #34d399; box-shadow: 0 0 12px rgba(16, 185, 129, 0.25); }
+    .status-failed { background: rgba(244, 63, 94, 0.2); color: #fb7185; box-shadow: 0 0 12px rgba(244, 63, 94, 0.25); }
+
+    /* Test Case List */
+    .test-cases {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .test-item {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 12px;
+      padding: 0.9rem 1.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+
+    .test-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .test-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .test-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .test-desc {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    .test-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+    }
+
+    .badge-pending { background: rgba(100, 116, 139, 0.1); color: #64748b; }
+    .badge-running { background: rgba(99, 102, 241, 0.1); color: #818cf8; }
+    .badge-passed { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .badge-failed { background: rgba(244, 63, 94, 0.15); color: #f43f5e; }
+
+    /* Console Log section */
+    .test-log-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .test-log-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: #64748b;
+      letter-spacing: 0.05em;
+    }
+
+    .test-log {
+      background: #030712;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 0.9rem;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.75rem;
+      color: #94a3b8;
+      max-height: 200px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .log-info { color: #94a3b8; }
+    .log-success { color: #34d399; }
+    .log-error { color: #fb7185; font-weight: 600; }
+
+    /* Actions */
+    .run-btn {
+      background: linear-gradient(135deg, #0284c7, #4f46e5);
+      color: #fff;
+      border: none;
+      padding: 0.85rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+    }
+
+    .run-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(79, 70, 229, 0.45);
+      background: linear-gradient(135deg, #0369a1, #4338ca);
+    }
+
+    .run-btn:active {
+      transform: translateY(1px);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    @media (max-width: 1024px) {
+      .test-wrapper {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+
+  <script>
+    // 1. Mock LocalStorage for Isolation
+    const mockStore = {};
+    const originalLocalStorage = window.localStorage;
+
+    // Define mock localStorage properties
+    const mockLocalStorage = {
+      getItem: function(key) {
+        return mockStore.hasOwnProperty(key) ? mockStore[key] : null;
+      },
+      setItem: function(key, value) {
+        mockStore[key] = String(value);
+      },
+      removeItem: function(key) {
+        delete mockStore[key];
+      },
+      clear: function() {
+        for (let key in mockStore) {
+          delete mockStore[key];
+        }
+      },
+      get length() {
+        return Object.keys(mockStore).length;
+      },
+      key: function(i) {
+        const keys = Object.keys(mockStore);
+        return keys[i] || null;
+      }
+    };
+
+    // Override global localStorage
+    Object.defineProperty(window, 'localStorage', {
+      value: mockLocalStorage,
+      writable: true
+    });
+  </script>
+</head>
+<body>
+
+  <div class="test-wrapper">
+    
+    <!-- LEFT SIDE: The actual application interface -->
+    <div class="app-section">
+      <div class="app-container" style="margin: 0 auto; max-width: 100%;">
+        
+        <!-- Application Header -->
+        <header class="app-header">
+          <div class="brand">
+            <div class="brand-icon">
+              <svg viewBox="0 0 24 24">
+                <polyline points="9 11 12 14 22 4"></polyline>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+              </svg>
+            </div>
+            <h1 class="app-title">Smart Task Manager</h1>
+          </div>
+          <p class="app-subtitle">A premium workspace to organize, track, and complete your daily goals.</p>
+        </header>
+
+        <!-- Stats Dashboard Counters -->
+        <section class="stats-grid" aria-label="Task Statistics">
+          <div class="stat-card total" id="stat-total-card">
+            <span class="stat-val" id="total-count">0</span>
+            <span class="stat-label">Total Tasks</span>
+          </div>
+          <div class="stat-card pending" id="stat-pending-card">
+            <span class="stat-val" id="pending-count">0</span>
+            <span class="stat-label">Pending</span>
+          </div>
+          <div class="stat-card completed" id="stat-completed-card">
+            <span class="stat-val" id="completed-count">0</span>
+            <span class="stat-label">Completed</span>
+          </div>
+        </section>
+
+        <!-- Task Input Section -->
+        <section class="input-card">
+          <form class="input-form" id="task-form">
+            <div class="input-wrapper">
+              <span class="input-icon">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+              </span>
+              <input type="text" class="task-input" id="task-input" placeholder="Type a new task and press Enter..." maxlength="120" required autocomplete="off">
+            </div>
+            <button type="submit" class="add-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Add Task
+            </button>
+          </form>
+        </section>
+
+        <!-- Split Task Lists Columns -->
+        <main class="tasks-columns">
+          
+          <!-- Pending Column -->
+          <section class="column" aria-label="Pending Tasks">
+            <div class="column-header">
+              <div class="column-title-wrapper">
+                <span class="column-indicator pending-indicator"></span>
+                <h2 class="column-title">Pending Tasks</h2>
+              </div>
+              <span class="column-badge" id="pending-badge">0</span>
+            </div>
+            <div class="task-list" id="pending-list">
+              <!-- Pending Task Cards Rendered Dynamically -->
+            </div>
+          </section>
+
+          <!-- Completed Column -->
+          <section class="column" aria-label="Completed Tasks">
+            <div class="column-header">
+              <div class="column-title-wrapper">
+                <span class="column-indicator completed-indicator"></span>
+                <h2 class="column-title">Completed Tasks</h2>
+              </div>
+              <span class="column-badge" id="completed-badge">0</span>
+            </div>
+            <div class="task-list completed-tasks" id="completed-list">
+              <!-- Completed Task Cards Rendered Dynamically -->
+            </div>
+          </section>
+
+        </main>
+
+      </div>
+    </div>
+
+    <!-- RIGHT SIDE: Test Runner Control Dashboard -->
+    <div class="runner-section">
+      <div class="runner-panel">
+        
+        <div class="runner-header">
+          <h2 class="runner-title">Automated Test Runner</h2>
+          <p class="runner-subtitle">Runs integration checks against DOM, State, and LocalStorage</p>
+        </div>
+
+        <div class="status-summary">
+          <span style="font-size: 0.9rem; font-weight: 600;">Suite Status:</span>
+          <span class="suite-status status-idle" id="suite-status-badge">Idle</span>
+        </div>
+
+        <!-- Test cases visualizer list -->
+        <div class="test-cases">
+          <div class="test-item" id="test-1">
+            <div class="test-info">
+              <span class="test-name">1. App Initialization & Seed Tasks</span>
+              <span class="test-desc">Verifies if default seed tasks are loaded and stats match.</span>
+            </div>
+            <span class="test-badge badge-pending" id="test-1-badge">Pending</span>
+          </div>
+
+          <div class="test-item" id="test-2">
+            <div class="test-info">
+              <span class="test-name">2. Add Task Functionality</span>
+              <span class="test-desc">Creates a task and asserts list contents & counter updates.</span>
+            </div>
+            <span class="test-badge badge-pending" id="test-2-badge">Pending</span>
+          </div>
+
+          <div class="test-item" id="test-3">
+            <div class="test-info">
+              <span class="test-name">3. Complete Task Functionality</span>
+              <span class="test-desc">Clicks task checkbox, waits for transition, and checks completed state.</span>
+            </div>
+            <span class="test-badge badge-pending" id="test-3-badge">Pending</span>
+          </div>
+
+          <div class="test-item" id="test-4">
+            <div class="test-info">
+              <span class="test-name">4. Delete Task Functionality</span>
+              <span class="test-desc">Deletes completed task, asserts DOM removal and count updates.</span>
+            </div>
+            <span class="test-badge badge-pending" id="test-4-badge">Pending</span>
+          </div>
+
+          <div class="test-item" id="test-5">
+            <div class="test-info">
+              <span class="test-name">5. LocalStorage Persistence</span>
+              <span class="test-desc">Tests state serialization and robust recovery from corrupted data.</span>
+            </div>
+            <span class="test-badge badge-pending" id="test-5-badge">Pending</span>
+          </div>
+
+          <div class="test-item" id="test-6">
+            <div class="test-info">
+              <span class="test-name">6. Double Click / Action Prevention</span>
+              <span class="test-desc">Verifies rapid inputs do not duplicate updates during transitions.</span>
+            </div>
+            <span class="test-badge badge-pending" id="test-6-badge">Pending</span>
+          </div>
+        </div>
+
+        <!-- Terminal Log Console -->
+        <div class="test-log-wrapper">
+          <span class="test-log-title">Assertion Console Logs</span>
+          <div class="test-log" id="test-log">
+            <div class="log-info">> Test runner initialized. Click "Run Test Suite" to execute.</div>
+          </div>
+        </div>
+
+        <button class="run-btn" id="run-test-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          Run Test Suite
+        </button>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Load the main application logic script -->
+  <script src="script.js"></script>
+
+  <!-- Test Script Harness -->
+  <script>
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    const suiteStatusBadge = document.getElementById('suite-status-badge');
+    const runTestBtn = document.getElementById('run-test-btn');
+    const logConsole = document.getElementById('test-log');
+
+    // UI Updates helpers
+    function setSuiteStatus(status) {
+      suiteStatusBadge.className = 'suite-status status-' + status;
+      suiteStatusBadge.textContent = status;
+    }
+
+    function setTestStatus(testNum, status) {
+      const badge = document.getElementById(`test-${testNum}-badge`);
+      badge.className = `test-badge badge-${status}`;
+      badge.textContent = status;
+    }
+
+    function log(message, type = 'info') {
+      const div = document.createElement('div');
+      div.className = `log-${type}`;
+      div.textContent = `${type === 'error' ? '✖' : type === 'success' ? '✔' : '>'} ${message}`;
+      logConsole.appendChild(div);
+      logConsole.scrollTop = logConsole.scrollHeight;
+    }
+
+    function clearLogs() {
+      logConsole.innerHTML = '';
+    }
+
+    // Custom Assertion Library
+    function assert(condition, message) {
+      if (!condition) {
+        throw new Error(message);
+      }
+      log(`Assert Passed: ${message}`, 'success');
+    }
+
+    // Run Suite
+    runTestBtn.addEventListener('click', async () => {
+      runTestBtn.disabled = true;
+      runTestBtn.style.opacity = 0.5;
+      clearLogs();
+      setSuiteStatus('running');
+
+      // Reset test badges
+      for (let i = 1; i <= 6; i++) {
+        setTestStatus(i, 'pending');
+      }
+
+      log('Starting automated integration test suite...');
+      
+      try {
+        // --- TEST 1: App Initialization & Seed Tasks ---
+        setTestStatus(1, 'running');
+        log('Resetting mock localStorage and loading seed tasks...');
+        mockStore['smart_tasks'] = null; // force seeds load
+        init(); // reload app script state
+        
+        assert(tasks.length === 4, 'Tasks array has exactly 4 items (seed tasks)');
+        assert(tasks.filter(t => !t.completed).length === 3, 'In-memory has exactly 3 pending tasks');
+        assert(tasks.filter(t => t.completed).length === 1, 'In-memory has exactly 1 completed task');
+        
+        // Assert UI counts
+        assert(totalCountEl.textContent === '4', 'Dashboard displays Total Tasks: 4');
+        assert(pendingCountEl.textContent === '3', 'Dashboard displays Pending: 3');
+        assert(completedCountEl.textContent === '1', 'Dashboard displays Completed: 1');
+        assert(pendingBadge.textContent === '3', 'Pending Column badge displays: 3');
+        assert(completedBadge.textContent === '1', 'Completed Column badge displays: 1');
+
+        // Check DOM list elements
+        const domPending = pendingList.querySelectorAll('.task-item');
+        const domCompleted = completedList.querySelectorAll('.task-item');
+        assert(domPending.length === 3, 'DOM pending list has exactly 3 elements');
+        assert(domCompleted.length === 1, 'DOM completed list has exactly 1 element');
+        
+        setTestStatus(1, 'passed');
+        await sleep(600); // Visual delay
+
+        // --- TEST 2: Add Task Functionality ---
+        setTestStatus(2, 'running');
+        log('Injecting task input "Build automated runner UI" and submitting...');
+        
+        taskInput.value = 'Build automated runner UI';
+        taskForm.dispatchEvent(new Event('submit'));
+
+        assert(taskInput.value === '', 'Task input is cleared after form submission');
+        assert(tasks.length === 5, 'Tasks state increased to 5 items');
+        assert(tasks[0].text === 'Build automated runner UI', 'New task added at the top of tasks array');
+        assert(!tasks[0].completed, 'New task completed status is false');
+
+        // Assert UI updates
+        assert(totalCountEl.textContent === '5', 'Dashboard displays Total Tasks: 5');
+        assert(pendingCountEl.textContent === '4', 'Dashboard displays Pending: 4');
+        assert(completedCountEl.textContent === '1', 'Dashboard displays Completed: 1');
+        assert(pendingBadge.textContent === '4', 'Pending badge count is 4');
+
+        const domPendingAfterAdd = pendingList.querySelectorAll('.task-item');
+        assert(domPendingAfterAdd.length === 4, 'DOM pending list elements updated to 4');
+        assert(domPendingAfterAdd[0].querySelector('.task-text').textContent === 'Build automated runner UI', 'DOM displays the new task at the top');
+
+        setTestStatus(2, 'passed');
+        await sleep(600); // Visual delay
+
+        // --- TEST 3: Complete Task Functionality ---
+        setTestStatus(3, 'running');
+        log('Completing the newly created task (clicking the task text to verify label for action)...');
+        
+        const addedTaskCard = pendingList.querySelectorAll('.task-item')[0];
+        const addedTaskId = tasks[0].id;
+        const textLabel = addedTaskCard.querySelector('.task-text');
+        
+        // Simulate click on the label text
+        textLabel.click();
+
+        assert(addedTaskCard.classList.contains('removing'), 'Task card immediately gains "removing" animation class');
+        log('Waiting for animation transition (350ms)...');
+        await sleep(350);
+
+        // Check state update
+        assert(tasks.find(t => t.id === addedTaskId).completed === true, 'Task completed status updated to true in state');
+        assert(totalCountEl.textContent === '5', 'Dashboard Total Tasks remains 5');
+        assert(pendingCountEl.textContent === '3', 'Dashboard Pending decreased to 3');
+        assert(completedCountEl.textContent === '2', 'Dashboard Completed increased to 2');
+        assert(pendingBadge.textContent === '3', 'Pending Badge displays 3');
+        assert(completedBadge.textContent === '2', 'Completed Badge displays 2');
+
+        const completedCards = completedList.querySelectorAll('.task-item');
+        assert(completedCards[0].querySelector('.task-text').textContent === 'Build automated runner UI', 'Task is rendered in the Completed column');
+        
+        setTestStatus(3, 'passed');
+        await sleep(600); // Visual delay
+
+        // --- TEST 4: Delete Task Functionality ---
+        setTestStatus(4, 'running');
+        log('Deleting the completed task...');
+        
+        const targetCompletedCard = completedList.querySelectorAll('.task-item')[0];
+        const deleteButton = targetCompletedCard.querySelector('.delete-btn');
+        
+        deleteButton.click();
+
+        assert(targetCompletedCard.classList.contains('removing'), 'Task card gains "removing" animation class');
+        log('Waiting for deletion transition (350ms)...');
+        await sleep(350);
+
+        assert(tasks.length === 4, 'Tasks state decreased back to 4');
+        assert(tasks.find(t => t.id === addedTaskId) === undefined, 'Deleted task is no longer present in in-memory state');
+        
+        // Assert UI updates
+        assert(totalCountEl.textContent === '4', 'Dashboard displays Total Tasks: 4');
+        assert(pendingCountEl.textContent === '3', 'Dashboard displays Pending: 3');
+        assert(completedCountEl.textContent === '1', 'Dashboard displays Completed: 1');
+        assert(completedBadge.textContent === '1', 'Completed Badge is 1');
+
+        setTestStatus(4, 'passed');
+        await sleep(600); // Visual delay
+
+        // --- TEST 5: LocalStorage Persistence ---
+        setTestStatus(5, 'running');
+        log('Checking LocalStorage serialization...');
+        
+        const serialized = mockStore['smart_tasks'];
+        assert(!!serialized, 'LocalStorage has key "smart_tasks"');
+        const parsed = JSON.parse(serialized);
+        assert(parsed.length === 4, 'LocalStorage contains exactly 4 tasks');
+        assert(parsed[0].id === tasks[0].id, 'LocalStorage state matches in-memory tasks state');
+
+        log('Testing localStorage CORRUPTED JSON recovery bugfix...');
+        mockStore['smart_tasks'] = "{invalid-json: true"; // Set corrupt value
+        
+        // Trigger init() which reads localStorage
+        init(); 
+
+        assert(tasks.length === 4, 'Application recovered from corrupted JSON and loaded default seed tasks');
+        assert(tasks[0].id === 1, 'First seed task successfully re-instated');
+        assert(JSON.parse(mockStore['smart_tasks']).length === 4, 'Valid fallback seed tasks written back to localStorage');
+
+        setTestStatus(5, 'passed');
+        await sleep(600); // Visual delay
+
+        // --- TEST 6: Double Click / Action Prevention ---
+        setTestStatus(6, 'running');
+        log('Verifying double action spam prevention during transitions...');
+        
+        // Re-init state
+        mockStore['smart_tasks'] = null;
+        init();
+
+        const firstCard = pendingList.querySelectorAll('.task-item')[0];
+        const firstTaskId = tasks[0].id;
+        const checkboxEl = firstCard.querySelector('input[type="checkbox"]');
+        
+        // Double-click the checkbox (dispatch multiple change events immediately)
+        checkboxEl.click();
+        checkboxEl.click();
+        checkboxEl.click();
+
+        log('Dispatched 3 rapid click updates. Verifying animation block...');
+        assert(firstCard.classList.contains('removing'), 'Task card is in "removing" animation phase');
+        
+        await sleep(350);
+
+        // State check: toggled exactly once
+        const updatedTask = tasks.find(t => t.id === firstTaskId);
+        assert(updatedTask.completed === true, 'Task completed status toggled exactly once (no multiple transition triggers)');
+        
+        setTestStatus(6, 'passed');
+        await sleep(350);
+
+        // Entire suite passed
+        log('All automated integration test suites have PASSED successfully!', 'success');
+        setSuiteStatus('passed');
+
+      } catch (err) {
+        log(`Test suite failed: ${err.message}`, 'error');
+        setSuiteStatus('failed');
+        // Find which test failed and set it to failed
+        const runningBadge = document.querySelector('.test-badge.badge-running');
+        if (runningBadge) {
+          runningBadge.className = 'test-badge badge-failed';
+          runningBadge.textContent = 'failed';
+        }
+      } finally {
+        runTestBtn.disabled = false;
+        runTestBtn.style.opacity = 1;
+      }
+    });
+
+    // Autoplay on page load
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        runTestBtn.click();
+      }, 500);
+    });
+  </script>
+</body>
+</html>

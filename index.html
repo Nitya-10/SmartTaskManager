@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Task Manager</title>
+  <!-- Link CSS stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Application Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <!-- Custom task check SVG logo -->
+          <svg viewBox="0 0 24 24">
+            <polyline points="9 11 12 14 22 4"></polyline>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+          </svg>
+        </div>
+        <h1 class="app-title">Smart Task Manager</h1>
+      </div>
+      <p class="app-subtitle">A premium workspace to organize, track, and complete your daily goals.</p>
+    </header>
+
+    <!-- Stats Dashboard Counters -->
+    <section class="stats-grid" aria-label="Task Statistics">
+      <div class="stat-card total" id="stat-total-card">
+        <span class="stat-val" id="total-count">0</span>
+        <span class="stat-label">Total Tasks</span>
+      </div>
+      <div class="stat-card pending" id="stat-pending-card">
+        <span class="stat-val" id="pending-count">0</span>
+        <span class="stat-label">Pending</span>
+      </div>
+      <div class="stat-card completed" id="stat-completed-card">
+        <span class="stat-val" id="completed-count">0</span>
+        <span class="stat-label">Completed</span>
+      </div>
+    </section>
+
+    <!-- Task Input Section -->
+    <section class="input-card">
+      <form class="input-form" id="task-form">
+        <div class="input-wrapper">
+          <span class="input-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+          </span>
+          <input type="text" class="task-input" id="task-input" placeholder="Type a new task and press Enter..." maxlength="120" required autocomplete="off">
+        </div>
+        <button type="submit" class="add-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Add Task
+        </button>
+      </form>
+    </section>
+
+    <!-- Split Task Lists Columns -->
+    <main class="tasks-columns">
+      
+      <!-- Pending Column -->
+      <section class="column" aria-label="Pending Tasks">
+        <div class="column-header">
+          <div class="column-title-wrapper">
+            <span class="column-indicator pending-indicator"></span>
+            <h2 class="column-title">Pending Tasks</h2>
+          </div>
+          <span class="column-badge" id="pending-badge">0</span>
+        </div>
+        <div class="task-list" id="pending-list">
+          <!-- Pending Task Cards Rendered Dynamically -->
+        </div>
+      </section>
+
+      <!-- Completed Column -->
+      <section class="column" aria-label="Completed Tasks">
+        <div class="column-header">
+          <div class="column-title-wrapper">
+            <span class="column-indicator completed-indicator"></span>
+            <h2 class="column-title">Completed Tasks</h2>
+          </div>
+          <span class="column-badge" id="completed-badge">0</span>
+        </div>
+        <div class="task-list completed-tasks" id="completed-list">
+          <!-- Completed Task Cards Rendered Dynamically -->
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- Link JavaScript functionality -->
+  <script src="script.js"></script>
+</body>
+</html>
